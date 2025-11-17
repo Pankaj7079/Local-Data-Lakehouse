@@ -1,5 +1,5 @@
 
-# 📘 Local Data Lakehouse (MinIO + Spark + Jupyter + Trino)
+# Local Data Lakehouse (MinIO + Spark + Jupyter + Trino)
 
 This project sets up a local Data Lakehouse environment on my laptop using Docker.
 It’s perfect for learning, data mining, analytics, and small-scale projects without relying on the cloud.
@@ -21,7 +21,7 @@ We use the following tools:
 lakehouse-project/
 │
 ├── docker-compose.yml    # All services defined here
-├── notebooks/            # Jupyter notebooks (your code & experiments)
+├── notebooks/            # Jupyter notebooks (code & experiments)
 └── minio/                # Local data storage (MinIO backend)
     └── data/             # Files stored in MinIO (like S3 buckets)
 ```
@@ -30,14 +30,14 @@ lakehouse-project/
 
 ## Setup Instructions
 
-### 1️⃣ Clone/Create Project Folder
+###  Clone/Create Project Folder
 
 ```bash
 mkdir lakehouse-project
 cd lakehouse-project
 ```
 
-### 2️⃣ Create `docker-compose.yml`
+###  Create `docker-compose.yml`
 
 Paste the following into a file named **docker-compose.yml**:
 
@@ -89,7 +89,7 @@ services:
 
 ---
 
-### 3️⃣ Start the Environment
+###  Start the Environment
 
 ```bash
 docker-compose up -d
@@ -103,9 +103,9 @@ docker ps
 
 ---
 
-## 🔑 How to Log In
+##  How to Log In
 
-### ▶️ Jupyter Notebook
+### Jupyter Notebook
 
 1. Open [http://localhost:8888](http://localhost:8888)
 2. Copy the **token** from logs:
@@ -123,7 +123,7 @@ docker ps
 
 ---
 
-### ▶️ MinIO (Object Storage)
+### MinIO (Object Storage)
 
 1. Open [http://localhost:9001](http://localhost:9001)
 2. Login credentials:
@@ -135,21 +135,21 @@ This is your **Data Lake layer** where raw data (CSV, JSON, Parquet) is stored.
 
 ---
 
-### ▶️ Spark Web UI
+### Spark Web UI
 
 * Spark Master: [http://localhost:8080](http://localhost:8080)
 * Workers will be visible here.
 
 ---
 
-### ▶️ Trino Web UI
+###  Trino Web UI
 
 * Open [http://localhost:8081](http://localhost:8081)
 * Run SQL queries on your data lake.
 
 ---
 
-## 📂 Data Lake Workflow
+##  Data Lake Workflow
 
 1. **Store Data** → Upload raw files (CSV/JSON/Parquet) to **MinIO**
 2. **Process Data** → Use **Spark** (via Jupyter notebooks) for ETL/cleaning
@@ -158,7 +158,7 @@ This is your **Data Lake layer** where raw data (CSV, JSON, Parquet) is stored.
 
 ---
 
-## 🔄 Useful Commands
+##  Useful Commands
 
 * Start environment:
 
