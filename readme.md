@@ -1,101 +1,96 @@
+# Local Data Lakehouse
 
-# Local Data Lakehouse (MinIO + Spark + Jupyter + Trino)
-
-This project sets up a local Data Lakehouse environment on my laptop using Docker.
-It’s perfect for learning, data mining, analytics, and small-scale projects without relying on the cloud.
-
-This project sets up a **local Data Lakehouse** environment using **Docker**, so you can practice and learn without any cloud dependencies.
-
-We use the following tools:
-
-* **MinIO** → S3-compatible storage (Data Lake layer)
-* **Apache Spark** → Processing & ETL (Engine)
-* **Jupyter Notebook (PySpark Notebook)** → Interactive analytics & coding
-* **Trino (PrestoSQL)** → SQL engine for querying data in MinIO/Spark
+A local, containerized data-engineering environment built using MinIO, Apache Spark, Jupyter, Trino, and Airflow.
 
 ---
 
-##  Project Structure
+## Overview
+
+This project provides an end-to-end lakehouse architecture for storing, processing, querying, and visualizing data. It is designed for learning, experimentation, and building small-scale ETL workflows. The system integrates:
+
+* **MinIO** – S3-compatible object storage serving as the data lake.
+* **Apache Spark** – distributed compute engine for data transformation.
+* **Jupyter Notebook** – an interactive space for PySpark development and analysis.
+* **Trino** – SQL query engine for federated and fast data querying.
+* **Airflow** – orchestrator for automating ETL pipelines.
+* **Power BI** – dashboarding tool for analytics and reporting.
+
+---
+
+## Project Structure
 
 ```
-lakehouse-project/
-│
-├── docker-compose.yml    # All services defined here
-├── notebooks/            # Jupyter notebooks (code & experiments)
-└── minio/                # Local data storage (MinIO backend)
-    └── data/             # Files stored in MinIO (like S3 buckets)
+Local-Data-Lakehouse/
+├── docker-compose.yml                 # All services defined here
+├── airflow/                           # Airflow root folder
+│   └── dags/                          # DAG definition files
+│       ├── lakehouse_dag.py           # Airflow DAG for ETL automation
+│       └── __pycache__/               # Python cache generated automatically
+├── DATA/                              # Raw and processed datasets
+├── minio_data/                        # Backing storage for MinIO buckets
+├── src/                               # Jupyter notebooks, ETL scripts, PySpark code
+├── Final_Result_Images/               # Example charts or dashboard snapshots
+├── PowerBI.py                         # Helper script for Power BI preparation
+├── Customer Segment Dashboard.pbix    # Power BI dashboard
+├── requirements.txt                   # dependencies
+└── README.md                          # Project documentation
 ```
 
 ---
 
-## Setup Instructions
+## Working  Data
 
-###  Clone/Create Project Folder
+The `DATA/` directory contains the raw and processed files that move through the ETL workflow.
+Current files:
+
+```
+DATA/
+├── Customers.csv
+├── Final Customers.csv
+├── POWERBI DATA.csv
+└── students.csv
+```
+
+### File Details
+
+**Customers.csv**
+Raw input file. Contains unprocessed customer information. Used as the starting point for cleaning and transformation.
+
+**Final Customers.csv**
+Output from Spark processing. This file contains cleaned, standardized, enriched customer data ready for analytics or SQL querying.
+
+**POWERBI DATA.csv**
+Dataset prepared specifically for Power BI. Typically includes aggregated metrics, summary tables, or optimized columns for dashboard performance.
+
+**students.csv**
+Additional dataset used for testing, practice transformations, or validation of ETL logic.
+
+### How These Files Flow Through the Pipeline
+
+1. Raw files (Customers.csv, students.csv) are placed in MinIO.
+2. Spark reads the raw data, cleans it, and writes transformed outputs (Final Customers.csv or Parquet).
+3. Airflow automates these steps through `lakehouse_dag.py`.
+4. Trino queries the cleaned/processed data using SQL.
+5. Power BI loads `POWERBI DATA.csv` or Parquet outputs to build dashboards.
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
 
 ```bash
-mkdir lakehouse-project
-cd lakehouse-project
+git clone https://github.com/Pankaj7079/Local-Data-Lakehouse.git
+cd Local-Data-Lakehouse
 ```
 
-###  Create `docker-compose.yml`
-
-Paste the following into a file named **docker-compose.yml**:
-
-```yaml
-services:
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./minio/data:/data
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-
-  spark:
-    image: bitnami/spark:latest
-    container_name: spark
-    ports:
-      - "7077:7077"
-      - "8080:8080"
-
-  spark-worker:
-    image: bitnami/spark:latest
-    container_name: spark-worker
-    depends_on:
-      - spark
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark:7077
-
-  jupyter:
-    image: jupyter/pyspark-notebook:latest
-    container_name: jupyter
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./notebooks:/home/jovyan/work
-
-  trino:
-    image: trinodb/trino:latest
-    container_name: trino
-    ports:
-      - "8081:8080"
-```
-
----
-
-###  Start the Environment
+### 2. Start all services
 
 ```bash
 docker-compose up -d
 ```
 
-Check running containers:
+### 3. Check that all containers are running
 
 ```bash
 docker ps
@@ -103,82 +98,124 @@ docker ps
 
 ---
 
-##  How to Log In
+## Accessing the Services
 
 ### Jupyter Notebook
 
-1. Open [http://localhost:8888](http://localhost:8888)
-2. Copy the **token** from logs:
-
-   ```bash
-   docker logs jupyter
-   ```
-
-   Example:
-
-   ```
-   http://127.0.0.1:8888/lab?token=caf0fd65d279b07550d8d584092c0ada6bbda8a7a18c0bbe
-   ```
-3. Paste the token or just copy the full link into your browser. ✅
-
----
-
-### MinIO (Object Storage)
-
-1. Open [http://localhost:9001](http://localhost:9001)
-2. Login credentials:
-
-   * **Username**: `minioadmin`
-   * **Password**: `minioadmin`
-
-This is your **Data Lake layer** where raw data (CSV, JSON, Parquet) is stored.
-
----
-
-### Spark Web UI
-
-* Spark Master: [http://localhost:8080](http://localhost:8080)
-* Workers will be visible here.
-
----
-
-###  Trino Web UI
-
-* Open [http://localhost:8081](http://localhost:8081)
-* Run SQL queries on your data lake.
-
----
-
-##  Data Lake Workflow
-
-1. **Store Data** → Upload raw files (CSV/JSON/Parquet) to **MinIO**
-2. **Process Data** → Use **Spark** (via Jupyter notebooks) for ETL/cleaning
-3. **Query Data** → Use **Trino** to query processed data with SQL
-4. **Analyze Data** → Build reports & ML models in **Jupyter**
-
----
-
-##  Useful Commands
-
-* Start environment:
-
-  ```bash
-  docker-compose up -d
-  ```
-* Stop environment:
-
-  ```bash
-  docker-compose down
-  ```
-* Restart a single service:
-
-  ```bash
-  docker restart jupyter
-  ```
-* Check logs:
+* URL: `http://localhost:8888`
+* Find token:
 
   ```bash
   docker logs jupyter
   ```
 
+### MinIO
+
+* URL: `http://localhost:9001`
+* Default credentials:
+
+  * Username: `minioadmin`
+  * Password: `minioadmin`
+
+### Spark Web UI
+
+* URL: `http://localhost:8080`
+
+### Trino
+
+* URL: `http://localhost:8081`
+
+### Airflow
+
+* URL: `http://localhost:8082`
+* Login: `airflow / airflow`
+
+### Power BI
+
+Open the `.pbix` file and connect it to the processed datasets generated by Spark.
+
 ---
+
+## Lakehouse Workflow
+
+1. **Upload raw files** into MinIO.
+2. **Process data with PySpark** using Jupyter notebooks or Spark scripts.
+3. **Automate ETL** with Airflow using the `lakehouse_dag.py` DAG.
+4. **Query the transformed data** through Trino using SQL.
+5. **Build dashboards** in Power BI using cleaned and enriched datasets.
+6. **Iterate and extend** with new datasets or additional transformations.
+
+---
+
+## Future Enhancements
+
+* Delta Lake or Apache Iceberg for transactional lakehouse capabilities
+* Superset or Looker-style BI layer
+* Distributed Spark workers
+* Kafka-based streaming ingestion
+* Role-based access control and improved security
+
+---
+Architecture Diagram-----
+                          ┌──────────────────────────┐
+                          │        Power BI          │
+                          │   Dashboards & Reports   │
+                          └─────────────┬────────────┘
+                                        │
+                                        │ Reads processed data
+                                        ▼
+                          ┌──────────────────────────┐
+                          │         Trino            │
+                          │ SQL Query Engine (Fast)  │
+                          └─────────────┬────────────┘
+                                        │
+                                        │ Queries transformed data
+                                        ▼
+                ┌───────────────────────────────────────────────────────┐
+                │                   Apache Spark                        │
+                │  Data Processing • Cleaning • Transformations         │
+                └─────────────┬──────────────────────────────┬─────────┘
+                              │                              │
+                   Writes processed data            Reads raw data
+                              │                              │
+                              ▼                              ▼
+                ┌──────────────────────────┐     ┌──────────────────────────┐
+                │     Processed Zone       │     │        Raw Zone          │
+                │   (CSV / Parquet Files)  │     │   (CSV / JSON Inputs)    │
+                └─────────────┬────────────┘     └─────────────┬────────────┘
+                              │                              │
+                              └──────────────┬───────────────┘
+                                             ▼
+                                  ┌──────────────────────────┐
+                                  │         MinIO             │
+                                  │  S3-Compatible Data Lake  │
+                                  └─────────────┬────────────┘
+                                                │
+                                   File paths used by Spark,
+                                   Trino, Jupyter, and Airflow
+                                                │
+                                                ▼
+                            ┌────────────────────────────────┐
+                            │             Airflow             │
+                            │ DAG Orchestration • Scheduling  │
+                            └────────────────────────────────┘
+
+                            ┌────────────────────────────────┐
+                            │          Jupyter Notebook       │
+                            │  PySpark Analysis & Validation  │
+                            └────────────────────────────────┘
+
+
+
+This diagram clearly shows:
+
+.Data flow
+
+.Relationship between tools
+
+.Raw → Processed → Analytics pipeline
+
+.Automation layer
+
+.Where each service fits in the lakehouse
+
